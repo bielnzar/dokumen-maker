@@ -1,0 +1,26 @@
+# Core dependencies
+python-docx
+google-generativeai
+fastapi
+uvicorn
+python-multipart
+
+# PDF processing
+pdf2image
+
+# OCR (EasyOCR)
+easyocr
+
+# Image processing
+Pillow
+
+# Utilities
+python-dotenv
+openpyxl>=3.1.0
+beautifulsoup4
+num2words
+mammoth
+
+# Testing
+pytest
+pytest-asyncio

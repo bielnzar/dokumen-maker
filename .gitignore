@@ -1,0 +1,35 @@
+docs
+output
+output_test
+extracted
+venv
+.env
+.py*
+CLAUDE.md
+__pycache__
+*.pyc
+node_modules
+
+# Backend uploads
+uploads/
+
+# Frontend
+dist/
+dist-ssr/
+*.local
+.vite/
+.turbo/
+build/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+.claude
