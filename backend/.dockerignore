@@ -1,0 +1,10 @@
+venv/
+env/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+output/
+output_test/
+uploads/
+test_*.docx

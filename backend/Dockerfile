@@ -18,8 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Install Python requirements
+# Pre-install CPU-only PyTorch to prevent downloading 5GB+ CUDA dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy backend source code and templates
@@ -30,4 +32,5 @@ RUN mkdir -p uploads output
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Support dynamic PORT from cloud platforms (Koyeb/Render/Railway) or fallback to 8000
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
