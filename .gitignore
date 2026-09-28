@@ -33,3 +33,5 @@ Thumbs.db
 .idea/
 
 .claude
+bin/
+tunnel_url.txt
