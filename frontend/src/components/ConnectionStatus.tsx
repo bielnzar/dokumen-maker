@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useConnection } from '../context/ConnectionContext';
-import { RefreshCw, Server, Sparkles, WifiOff, CheckCircle2, ChevronDown } from 'lucide-react';
+import { RefreshCw, Server, Layers, WifiOff, CheckCircle2, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export const ConnectionStatus: React.FC = () => {
@@ -23,7 +23,7 @@ export const ConnectionStatus: React.FC = () => {
 
   return (
     <div className="relative" ref={popoverRef}>
-      {/* Sleek, proportional trigger badge */}
+      {/* Sleek, corporate trigger badge */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -36,35 +36,25 @@ export const ConnectionStatus: React.FC = () => {
           isOnline === null &&
             "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20 hover:bg-slate-500/15"
         )}
-        title="Klik untuk melihat status koneksi backend dan AI"
+        title="Klik untuk melihat status koneksi sistem"
       >
         {/* Status Dot */}
         {isOnline === true && (
-          <span className="relative flex h-1.5 w-1.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-          </span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
         )}
         {isOnline === false && (
           <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0"></span>
         )}
         {isOnline === null && (
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse"></span>
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
         )}
 
         {/* Status Label */}
         <span className="leading-none">
-          {isOnline === true && "AI & Server Aktif"}
-          {isOnline === false && "Server Offline"}
+          {isOnline === true && "Server Terhubung"}
+          {isOnline === false && "Server Terputus"}
           {isOnline === null && "Memeriksa..."}
         </span>
-
-        {/* Latency if Online */}
-        {isOnline === true && latencyMs !== null && (
-          <span className="text-[10px] font-mono opacity-70 leading-none">
-            {latencyMs}ms
-          </span>
-        )}
 
         <ChevronDown
           className={cn(
@@ -104,7 +94,7 @@ export const ConnectionStatus: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                 <Server className="w-3.5 h-3.5 opacity-70" />
-                Backend Server
+                Server Aplikasi
               </span>
               <span
                 className={cn(
@@ -126,19 +116,19 @@ export const ConnectionStatus: React.FC = () => {
               </span>
             </div>
 
-            {/* AI Engine Status */}
+            {/* Document Processing Engine */}
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 opacity-90" />
-                Mesin AI Gemini
+                <Layers className="w-3.5 h-3.5 text-slate-500 opacity-80" />
+                Layanan Ekstraksi & Data
               </span>
               <span className="font-medium text-slate-800 dark:text-slate-200">
                 {isOnline && healthData?.ai_configured ? (
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {healthData.ai_model || 'Gemini Flash'} (Siap)
+                    Siap Operasi
                   </span>
                 ) : isOnline ? (
-                  <span className="text-amber-600 dark:text-amber-400">API Key Belum Diisi</span>
+                  <span className="text-amber-600 dark:text-amber-400">Konfigurasi Belum Lengkap</span>
                 ) : (
                   <span className="text-slate-400">Tidak Tersedia</span>
                 )}
@@ -148,7 +138,7 @@ export const ConnectionStatus: React.FC = () => {
             {/* Latency */}
             {isOnline && latencyMs !== null && (
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Respon Jaringan</span>
+                <span className="text-slate-500 dark:text-slate-400">Waktu Respon</span>
                 <span className="font-mono text-slate-700 dark:text-slate-300">
                   {latencyMs} ms
                 </span>
@@ -158,7 +148,7 @@ export const ConnectionStatus: React.FC = () => {
             {/* Last Checked */}
             {lastChecked && (
               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                <span>Pemeriksaan Terakhir</span>
+                <span>Sinkronisasi Terakhir</span>
                 <span>{lastChecked.toLocaleTimeString()}</span>
               </div>
             )}
@@ -168,10 +158,10 @@ export const ConnectionStatus: React.FC = () => {
           {isOnline === false && (
             <div className="mt-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-[11px] text-rose-700 dark:text-rose-300 space-y-1.5">
               <p className="font-medium leading-snug">
-                Backend belum aktif atau tunnel terputus.
+                Layanan lokal backend tidak terhubung.
               </p>
               <p className="text-slate-600 dark:text-slate-400">
-                Jalankan perintah ini di terminal komputer Anda:
+                Jalankan service server di terminal:
               </p>
               <code className="block bg-rose-100/70 dark:bg-rose-900/60 px-2 py-1 rounded text-[10px] font-mono select-all">
                 ./start_public_server.sh
@@ -190,7 +180,7 @@ export const ConnectionStatus: React.FC = () => {
               <RefreshCw
                 className={cn("w-3.5 h-3.5", isChecking && "animate-spin text-primary")}
               />
-              <span>{isChecking ? 'Memeriksa...' : 'Periksa Ulang Sekarang'}</span>
+              <span>{isChecking ? 'Memeriksa...' : 'Periksa Koneksi Sistem'}</span>
             </button>
           </div>
         </div>

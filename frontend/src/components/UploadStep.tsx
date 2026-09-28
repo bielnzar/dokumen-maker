@@ -5,7 +5,7 @@ import { useConnection } from '../context/ConnectionContext';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import {
-  UploadCloud,
+  FileUp,
   FileText,
   AlertCircle,
   CheckCircle2,
@@ -21,7 +21,7 @@ interface UploadStepProps {
 }
 
 export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
-  const { isOnline, isChecking, healthData, checkConnection } = useConnection();
+  const { isOnline, isChecking, checkConnection } = useConnection();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,25 +105,25 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
   };
 
   return (
-    <div className="py-6 sm:py-10">
-      <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 p-6 sm:p-10 shadow-xs space-y-7">
+    <div className="py-4 sm:py-8">
+      <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 p-6 sm:p-9 shadow-xs space-y-6">
         {/* Title & Guidance */}
         <div className="space-y-1.5 text-center">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Unggah Laporan Hasil Pemeriksaan (LHP)
+            Unggah Dokumen Laporan Hasil Pemeriksaan (LHP)
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-            Sistem mengekstraksi judul proyek, rincian biaya (RAB), dan spesifikasi teknis (RKS) dari berkas PDF LHP.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+            Format resmi dokumen LHP (.pdf) dari Tim Pemeriksaan Fisik untuk penyusunan lembar kerja Rencana Anggaran Biaya (RAB) dan Rencana Kerja & Syarat (RKS).
           </p>
         </div>
 
-        {/* Live Server & AI Connection Status Notice */}
+        {/* Server Disconnected Notice */}
         {isOnline === false && (
           <div className="rounded-xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-50/90 dark:bg-rose-950/40 p-4 text-xs text-rose-800 dark:text-rose-200 space-y-2.5 animate-in fade-in duration-200">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2 font-semibold text-rose-900 dark:text-rose-200">
                 <WifiOff className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>Backend API & AI Sedang Offline</span>
+                <span>Layanan Pengolahan Dokumen Terputus</span>
               </div>
               <Button
                 type="button"
@@ -138,7 +138,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
               </Button>
             </div>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-              Aplikasi belum terhubung ke server pemrosesan dokumen. Pastikan server lokal dan tunnel aktif:
+              Sistem tidak dapat terhubung ke service backend pengolahan data lokal. Harap pastikan server telah diaktifkan:
             </p>
             <div className="p-2 rounded-lg bg-rose-100/70 dark:bg-rose-900/40 font-mono text-[11px] text-rose-950 dark:text-rose-200 flex items-center justify-between">
               <span>./start_public_server.sh</span>
@@ -147,19 +147,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
           </div>
         )}
 
-        {isOnline === true && (
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>
-              Sistem Siap • Terhubung ke <strong className="font-medium text-slate-700 dark:text-slate-200">{healthData?.ai_model || 'Gemini 3.6 Flash'}</strong>
-            </span>
-          </div>
-        )}
-
-        {/* Drop Zone (Soft, natural surface without rigid harsh dashed boxes) */}
+        {/* Drop Zone (Formal, professional corporate canvas) */}
         <div
           className={cn(
             "relative rounded-xl p-8 sm:p-10 text-center transition-all duration-200 border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:bg-slate-50 dark:hover:bg-slate-950/70 hover:border-slate-300 dark:hover:border-slate-700",
@@ -182,7 +170,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
 
           {file ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/60">
                 <FileCheck className="w-6 h-6" />
               </div>
               <div className="space-y-1">
@@ -201,19 +189,35 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center">
-                <UploadCloud className="w-6 h-6 stroke-[1.8]" />
+              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center border border-slate-200/80 dark:border-slate-700">
+                <FileUp className="w-6 h-6 stroke-[1.8]" />
               </div>
               <div className="space-y-1">
                 <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">
-                  <span className="text-primary font-semibold">Pilih berkas PDF</span> atau tarik berkas ke sini
+                  <span className="text-primary font-semibold">Pilih berkas PDF LHP</span> atau seret berkas ke area ini
                 </p>
                 <p className="text-xs text-slate-400">
-                  Maksimal ukuran berkas 50 MB
+                  Ukuran berkas maksimal 50 MB
                 </p>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Document Specifications & Information */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-left pt-1">
+          <div className="p-3 rounded-lg bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 space-y-0.5">
+            <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Dokumen Sumber</span>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">Berkas resmi LHP hasil inspeksi fisik lapangan.</p>
+          </div>
+          <div className="p-3 rounded-lg bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 space-y-0.5">
+            <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Kelengkapan Data</span>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">Memuat rincian pekerjaan, volume, dan estimasi biaya.</p>
+          </div>
+          <div className="p-3 rounded-lg bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 space-y-0.5">
+            <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Keluaran Sistem</span>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">Draf RAB (.xlsx/.pdf) dan naskah RKS (.docx/.pdf).</p>
+          </div>
         </div>
 
         {/* Error Notice */}
@@ -236,7 +240,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
                   ) : (
                     <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   )}
-                  Tahap 1: Pemindaian & Pembacaan Teks (OCR)
+                  Tahap 1: Pemindaian Dokumen LHP
                 </span>
                 <span className="text-slate-500">
                   {progress.phase === 'ai' ? 'Selesai' : `${getOcrPercentage()}%`}
@@ -267,7 +271,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
                   ) : (
                     <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-500">2</span>
                   )}
-                  Tahap 2: Ekstraksi Data Spesifikasi Pekerjaan
+                  Tahap 2: Penyusunan Rincian RAB & Spesifikasi RKS
                 </span>
                 <span className="text-slate-500">
                   {progress.status === 'completed' ? 'Selesai' : progress.phase === 'ai' ? `${progress.ai_progress || 0}%` : 'Menunggu'}
@@ -279,7 +283,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
               />
               {progress.phase === 'ai' && (
                 <p className="text-[11px] text-slate-400">
-                  Menyusun item RAB, pasal spesifikasi teknis, dan jadwal pelaksanaan...
+                  Menyusun lembar kerja anggaran, perhitungan termin, dan pasal spesifikasi...
                 </p>
               )}
             </div>
@@ -299,17 +303,17 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Memproses Dokumen...
+              Memproses & Menganalisis Dokumen...
             </>
           ) : isOnline === false ? (
             <>
               <WifiOff className="w-4 h-4 mr-2 text-rose-500" />
-              Server Offline — Aktifkan Server Dahulu
+              Layanan Offline — Aktifkan Service Server
             </>
           ) : (
             <>
               <FileText className="w-4 h-4 mr-2" />
-              Mulai Ekstraksi Berkas
+              Proses & Analisis Dokumen LHP
             </>
           )}
         </Button>

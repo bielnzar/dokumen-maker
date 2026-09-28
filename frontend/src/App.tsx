@@ -4,7 +4,7 @@ import { ReviewStep } from './components/ReviewStep';
 import { GenerateStep } from './components/GenerateStep';
 import type { ExtractedData, UploadResponse } from './types';
 import { Button } from './components/ui/button';
-import { ArrowLeft, ArrowRight, FileText, Check, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, RotateCcw } from 'lucide-react';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { cn } from './lib/utils';
@@ -21,9 +21,9 @@ import {
 type Step = 1 | 2 | 3;
 
 const STEPS = [
-  { step: 1, title: 'Unggah Berkas', desc: 'Laporan Hasil Pemeriksaan' },
-  { step: 2, title: 'Telaah & Koreksi', desc: 'RAB & Spesifikasi Pekerjaan' },
-  { step: 3, title: 'Unduh Dokumen', desc: 'RAB, RKS & Nota Dinas' },
+  { step: 1, title: 'Unggah Dokumen LHP', desc: 'Laporan Hasil Pemeriksaan' },
+  { step: 2, title: 'Verifikasi RAB & RKS', desc: 'Rincian Biaya & Spesifikasi' },
+  { step: 3, title: 'Penerbitan Dokumen', desc: 'Finalisasi Berkas Resmi' },
 ] as const;
 
 function App() {
@@ -51,15 +51,15 @@ function App() {
         <div className="container mx-auto max-w-5xl px-4 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Logo & Corporate Identity */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-2xs">
-              <FileText className="w-4.5 h-4.5 stroke-[2.2]" />
+            <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900 font-bold text-xs tracking-wider shadow-xs border border-slate-800 dark:border-slate-200 shrink-0">
+              TPS
             </div>
             <div>
               <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-snug">
-                DokumenMaker
+                Sistem Dokumen Pengadaan RAB & RKS
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                PT Terminal Petikemas Surabaya • Sistem Pengadaan Dokumen RAB & RKS
+                PT Terminal Petikemas Surabaya • Subholding Pelindo Terminal Petikemas
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ function App() {
           <div className="container mx-auto max-w-5xl px-4 flex items-center justify-between">
             <div className="text-xs text-slate-500 hidden sm:block">
               {step === 2 && 'Pastikan rincian data dan termin telah sesuai sebelum melanjutkan ke pratinjau.'}
-              {step === 3 && 'Dokumen siap digenerate dan diunduh dalam format resmi.'}
+              {step === 3 && 'Dokumen siap diterbitkan dan diunduh dalam format resmi.'}
             </div>
             <div className="flex items-center gap-3 ml-auto">
               {step === 2 && extractedData && (
