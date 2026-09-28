@@ -1,3 +1,13 @@
+---
+title: Dokumen Maker API
+emoji: 📑
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # DokumenMaker (LLM-RAB-RKS)
 
 Aplikasi otomasi dokumen pengadaan BUMN (**PT Terminal Petikemas Surabaya • Pelindo**). Mengonversi berkas LHP (*Laporan Hasil Pemeriksaan*) berformat PDF → ekstraksi data terstruktur berbasis AI → penelaahan & koreksi interaktif → penerbitan dokumen resmi **RAB (XLSX & PDF)**, **RKS (DOCX & PDF)**, dan **Nota Dinas Ijin Prinsip (DOCX & PDF)**.
