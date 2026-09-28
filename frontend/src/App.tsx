@@ -21,9 +21,9 @@ import {
 type Step = 1 | 2 | 3;
 
 const STEPS = [
-  { step: 1, title: 'Unggah Dokumen LHP', desc: 'Laporan Hasil Pemeriksaan' },
-  { step: 2, title: 'Verifikasi RAB & RKS', desc: 'Rincian Biaya & Spesifikasi' },
-  { step: 3, title: 'Penerbitan Dokumen', desc: 'Finalisasi Berkas Resmi' },
+  { step: 1, title: 'Unggah LHP', desc: 'Laporan Hasil Pemeriksaan' },
+  { step: 2, title: 'Telaah Dokumen', desc: 'Rincian Biaya & Spesifikasi' },
+  { step: 3, title: 'Penerbitan', desc: 'Finalisasi Berkas Resmi' },
 ] as const;
 
 function App() {
@@ -46,36 +46,41 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-primary/15 selection:text-primary">
-      {/* Top Header */}
+      {/* Top Header (Crisp, fixed-height enterprise navigation) */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/70 dark:border-slate-800 transition-all">
-        <div className="container mx-auto max-w-5xl px-4 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo & Corporate Identity */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900 font-bold text-xs tracking-wider shadow-xs border border-slate-800 dark:border-slate-200 shrink-0">
               TPS
             </div>
-            <div>
-              <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-snug">
-                Sistem Dokumen Pengadaan RAB & RKS
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                PT Terminal Petikemas Surabaya • Subholding Pelindo Terminal Petikemas
+            <div className="flex flex-col whitespace-nowrap justify-center">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm sm:text-[15px] font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
+                  Pengadaan RAB & RKS
+                </h1>
+                <span className="hidden md:inline-block text-[10px] font-medium tracking-wide px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+                  Pelindo
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-1">
+                PT Terminal Petikemas Surabaya
               </p>
             </div>
           </div>
 
-          {/* Stepper Navigation & Theme Toggle */}
-          <div className="flex items-center gap-2.5 sm:gap-4 justify-between sm:justify-end shrink-0">
-            <nav aria-label="Progress" className="flex items-center gap-2 sm:gap-3 text-xs">
+          {/* Stepper Navigation & Actions */}
+          <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+            <nav aria-label="Alur Pengadaan" className="hidden sm:flex items-center gap-2 sm:gap-3 text-xs">
               {STEPS.map((s, idx) => {
                 const isCompleted = step > s.step;
                 const isCurrent = step === s.step;
                 return (
                   <div key={s.step} className="flex items-center gap-2 sm:gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
                       <span
                         className={cn(
-                          "w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-semibold transition-colors",
+                          "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold transition-colors shrink-0",
                           isCurrent && "bg-primary text-primary-foreground font-bold",
                           isCompleted && "bg-emerald-600 text-white font-bold",
                           !isCurrent && !isCompleted && "bg-slate-200/80 dark:bg-slate-800 text-slate-500"
@@ -85,27 +90,29 @@ function App() {
                       </span>
                       <span
                         className={cn(
-                          "transition-colors hidden md:inline",
+                          "transition-colors text-xs select-none",
                           isCurrent && "text-slate-900 dark:text-slate-100 font-semibold",
                           isCompleted && "text-slate-600 dark:text-slate-300 font-medium",
-                          !isCurrent && !isCompleted && "text-slate-400 dark:text-slate-500"
+                          !isCurrent && !isCompleted && "text-slate-400 dark:text-slate-500 hidden md:inline"
                         )}
                       >
                         {s.title}
                       </span>
                     </div>
                     {idx < STEPS.length - 1 && (
-                      <span className="text-slate-300 dark:text-slate-700 text-xs">/</span>
+                      <span className="text-slate-300 dark:text-slate-700 text-xs select-none">/</span>
                     )}
                   </div>
                 );
               })}
             </nav>
 
-            <div className="h-4 w-[1px] bg-slate-200 dark:border-slate-800 hidden sm:block" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block shrink-0" />
 
-            {/* Backend & AI Connection Status */}
+            {/* Backend Connection Status */}
             <ConnectionStatus />
+
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block shrink-0" />
 
             {/* Theme Toggle (Light / Dark / System) */}
             <ThemeToggle />
