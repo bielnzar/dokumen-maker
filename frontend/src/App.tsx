@@ -50,22 +50,27 @@ function App() {
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/70 dark:border-slate-800 transition-all">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo & Corporate Identity */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900 font-bold text-xs tracking-wider shadow-xs border border-slate-800 dark:border-slate-200 shrink-0">
-              TPS
-            </div>
+          <div className="flex items-center gap-3.5 shrink-0">
+            {/* Monochrome Pelindo TPS Logo (Dark Mode = White, Light Mode = Charcoal Slate) */}
+            <img
+              src="/logo-tps-monokrom-black.png"
+              alt="Logo Pelindo Terminal Petikemas TPS Surabaya"
+              className="h-8 sm:h-9 w-auto object-contain block dark:hidden shrink-0 select-none"
+            />
+            <img
+              src="/logo-tps-monokrom.png"
+              alt="Logo Pelindo Terminal Petikemas TPS Surabaya"
+              className="h-8 sm:h-9 w-auto object-contain hidden dark:block shrink-0 select-none"
+            />
+
+            {/* Subtle Divider */}
+            <div className="h-6 w-px bg-slate-200/80 dark:bg-slate-800 shrink-0 hidden sm:block" />
+
+            {/* Application Title */}
             <div className="flex flex-col whitespace-nowrap justify-center">
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm sm:text-[15px] font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
-                  Pengadaan RAB & RKS
-                </h1>
-                <span className="hidden md:inline-block text-[10px] font-medium tracking-wide px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
-                  Pelindo
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-1">
-                PT Terminal Petikemas Surabaya
-              </p>
+              <h1 className="text-sm sm:text-[15px] font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
+                Pengadaan RAB & RKS
+              </h1>
             </div>
           </div>
 
