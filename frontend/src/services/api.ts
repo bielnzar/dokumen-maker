@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { ExtractedData, UploadResponse, GenerateResponse, UploadProgress } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://municipality-progressive-peterson-functionality.trycloudflare.com');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://shield-artificial-games-traditional.trycloudflare.com');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
