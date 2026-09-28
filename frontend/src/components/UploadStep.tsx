@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { apiService } from '../services/api';
 import type { UploadResponse, UploadProgress } from '../types';
+import { useConnection } from '../context/ConnectionContext';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import {
@@ -9,7 +10,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  FileCheck
+  FileCheck,
+  WifiOff,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -18,6 +21,7 @@ interface UploadStepProps {
 }
 
 export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
+  const { isOnline, isChecking, healthData, checkConnection } = useConnection();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +116,48 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
             Sistem mengekstraksi judul proyek, rincian biaya (RAB), dan spesifikasi teknis (RKS) dari berkas PDF LHP.
           </p>
         </div>
+
+        {/* Live Server & AI Connection Status Notice */}
+        {isOnline === false && (
+          <div className="rounded-xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-50/90 dark:bg-rose-950/40 p-4 text-xs text-rose-800 dark:text-rose-200 space-y-2.5 animate-in fade-in duration-200">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2 font-semibold text-rose-900 dark:text-rose-200">
+                <WifiOff className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>Backend API & AI Sedang Offline</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => checkConnection()}
+                disabled={isChecking}
+                className="h-7 px-2.5 text-[11px] border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 cursor-pointer"
+              >
+                <RefreshCw className={cn("w-3 h-3 mr-1.5", isChecking && "animate-spin")} />
+                {isChecking ? "Memeriksa..." : "Cek Ulang"}
+              </Button>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+              Aplikasi belum terhubung ke server pemrosesan dokumen. Pastikan server lokal dan tunnel aktif:
+            </p>
+            <div className="p-2 rounded-lg bg-rose-100/70 dark:bg-rose-900/40 font-mono text-[11px] text-rose-950 dark:text-rose-200 flex items-center justify-between">
+              <span>./start_public_server.sh</span>
+              <span className="text-[10px] text-rose-600 dark:text-rose-400 font-sans">Jalankan di Terminal</span>
+            </div>
+          </div>
+        )}
+
+        {isOnline === true && (
+          <div className="flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>
+              Sistem Siap • Terhubung ke <strong className="font-medium text-slate-700 dark:text-slate-200">{healthData?.ai_model || 'Gemini 3.6 Flash'}</strong>
+            </span>
+          </div>
+        )}
 
         {/* Drop Zone (Soft, natural surface without rigid harsh dashed boxes) */}
         <div
@@ -243,14 +289,22 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
         {/* Action Button */}
         <Button
           onClick={handleUpload}
-          disabled={!file || loading}
-          className="w-full h-11 text-xs sm:text-sm font-semibold shadow-xs"
+          disabled={!file || loading || isOnline === false}
+          className={cn(
+            "w-full h-11 text-xs sm:text-sm font-semibold shadow-xs cursor-pointer",
+            isOnline === false && "bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800"
+          )}
           size="lg"
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Memproses Dokumen...
+            </>
+          ) : isOnline === false ? (
+            <>
+              <WifiOff className="w-4 h-4 mr-2 text-rose-500" />
+              Server Offline — Aktifkan Server Dahulu
             </>
           ) : (
             <>

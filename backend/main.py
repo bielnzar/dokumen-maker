@@ -151,8 +151,15 @@ async def root():
 
 
 @app.get("/health")
+@app.get("/api/health")
 async def health():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "ai_model": Config.GEMINI_MODEL,
+        "ai_configured": bool(Config.GEMINI_API_KEY),
+        "app_title": Config.APP_TITLE,
+        "version": Config.APP_VERSION,
+    }
 
 
 @app.post("/api/upload")

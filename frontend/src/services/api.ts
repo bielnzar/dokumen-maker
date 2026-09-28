@@ -1,7 +1,15 @@
 import axios from 'axios';
 import type { ExtractedData, UploadResponse, GenerateResponse, UploadProgress } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://shield-artificial-games-traditional.trycloudflare.com');
+export interface HealthStatus {
+  status: string;
+  ai_model?: string;
+  ai_configured?: boolean;
+  app_title?: string;
+  version?: string;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://context-mile-hire-cigarettes.trycloudflare.com');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -81,8 +89,8 @@ export const apiService = {
     return response.data;
   },
 
-  async healthCheck(): Promise<{ status: string }> {
-    const response = await api.get('/health');
+  async healthCheck(): Promise<HealthStatus> {
+    const response = await api.get<HealthStatus>('/health');
     return response.data;
   },
 

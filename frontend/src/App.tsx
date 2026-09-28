@@ -6,6 +6,7 @@ import type { ExtractedData, UploadResponse } from './types';
 import { Button } from './components/ui/button';
 import { ArrowLeft, ArrowRight, FileText, Check, RotateCcw } from 'lucide-react';
 import { ThemeToggle } from './components/ThemeToggle';
+import { ConnectionStatus } from './components/ConnectionStatus';
 import { cn } from './lib/utils';
 import {
   AlertDialog,
@@ -64,7 +65,7 @@ function App() {
           </div>
 
           {/* Stepper Navigation & Theme Toggle */}
-          <div className="flex items-center gap-3 sm:gap-5 justify-between sm:justify-end">
+          <div className="flex items-center gap-2.5 sm:gap-4 justify-between sm:justify-end shrink-0">
             <nav aria-label="Progress" className="flex items-center gap-2 sm:gap-3 text-xs">
               {STEPS.map((s, idx) => {
                 const isCompleted = step > s.step;
@@ -102,6 +103,9 @@ function App() {
             </nav>
 
             <div className="h-4 w-[1px] bg-slate-200 dark:border-slate-800 hidden sm:block" />
+
+            {/* Backend & AI Connection Status */}
+            <ConnectionStatus />
 
             {/* Theme Toggle (Light / Dark / System) */}
             <ThemeToggle />
