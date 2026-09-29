@@ -14,7 +14,7 @@ const getDefaultBaseUrl = (): string => {
     const saved = localStorage.getItem('dokumen_maker_api_url');
     if (saved && saved.trim()) return saved.trim().replace(/\/+$/, '');
   }
-  return import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8090' : 'https://cordless-travel-acrobat-nowhere.trycloudflare.com');
+  return import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8090' : 'https://nonpossessive-pinkly-mattie.ngrok-free.dev');
 };
 
 let currentBaseUrl = getDefaultBaseUrl();
