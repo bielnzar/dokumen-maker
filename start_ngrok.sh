@@ -70,21 +70,17 @@ sleep 1
 echo "🌐 Menjalankan Ngrok Tunnel..."
 if [ -n "$STATIC_DOMAIN" ]; then
     echo "📌 Menggunakan Static Domain: $STATIC_DOMAIN"
-    nohup "$NGROK_BIN" http --url="$STATIC_DOMAIN" "$BACKEND_PORT" --log=stdout > "$DIR/ngrok.log" 2>&1 &
+    setsid "$NGROK_BIN" http --url="$STATIC_DOMAIN" "$BACKEND_PORT" --log=stdout </dev/null > "$DIR/ngrok.log" 2>&1 &
 else
-    nohup "$NGROK_BIN" http "$BACKEND_PORT" --log=stdout > "$DIR/ngrok.log" 2>&1 &
+    setsid "$NGROK_BIN" http "$BACKEND_PORT" --log=stdout </dev/null > "$DIR/ngrok.log" 2>&1 &
 fi
-disown
 
 # 6. Dapatkan Public URL dari API lokal Ngrok
 echo "⏳ Mengambil URL Publik Ngrok..."
 PUBLIC_URL=""
 for i in {1..20}; do
     if curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -q "public_url"; then
-        PUBLIC_URL=$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -oE "https://[a-zA-Z0-9.-]+\.ngrok-free\.app" | head -n 1 || true)
-        if [ -z "$PUBLIC_URL" ]; then
-            PUBLIC_URL=$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -oE "https://[a-zA-Z0-9.-]+\.ngrok\.app" | head -n 1 || true)
-        fi
+        PUBLIC_URL=$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -oE '"public_url":"https://[^"]+"' | head -n 1 | cut -d'"' -f4 || true)
         if [ -n "$PUBLIC_URL" ]; then
             break
         fi
