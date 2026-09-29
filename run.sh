@@ -16,11 +16,11 @@ if grep -q "your_key_here" "$SCRIPT_DIR/backend/.env"; then
 fi
 
 # Detect port availability
-BACKEND_PORT=8000
+BACKEND_PORT=8090
 FRONTEND_PORT=5173
 
-if ss -tuln | grep -q ":8000 "; then
-    BACKEND_PORT=8001
+if ss -tuln | grep -q ":8090 "; then
+    BACKEND_PORT=8091
 fi
 
 if ss -tuln | grep -q ":5173 "; then

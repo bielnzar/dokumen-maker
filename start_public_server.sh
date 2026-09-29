@@ -8,21 +8,23 @@ echo "=========================================="
 echo "🚀 DokumenMaker Backend & Cloudflare Tunnel"
 echo "=========================================="
 
+BACKEND_PORT=8090
+
 # Check if backend is already running
-if curl -s http://127.0.0.1:8000/health 2>/dev/null | grep -q "healthy"; then
-    echo "✅ FastAPI backend is already running on port 8000."
+if curl -s "http://127.0.0.1:${BACKEND_PORT}/health" 2>/dev/null | grep -q "healthy"; then
+    echo "✅ FastAPI backend is already running on port ${BACKEND_PORT}."
 else
-    echo "📦 Starting FastAPI backend on port 8000..."
-    fuser -k 8000/tcp >/dev/null 2>&1 || true
+    echo "📦 Starting FastAPI backend on port ${BACKEND_PORT}..."
+    fuser -k "${BACKEND_PORT}/tcp" >/dev/null 2>&1 || true
     sleep 1
     cd "$DIR/backend"
-    nohup "$DIR/backend/venv/bin/uvicorn" main:app --host 0.0.0.0 --port 8000 > "$DIR/backend.log" 2>&1 &
+    nohup "$DIR/backend/venv/bin/uvicorn" main:app --host 0.0.0.0 --port "${BACKEND_PORT}" > "$DIR/backend.log" 2>&1 &
     disown
     cd "$DIR"
 
     echo "⏳ Waiting for backend to start..."
     for i in {1..15}; do
-        if curl -s http://127.0.0.1:8000/health 2>/dev/null | grep -q "healthy"; then
+        if curl -s "http://127.0.0.1:${BACKEND_PORT}/health" 2>/dev/null | grep -q "healthy"; then
             echo "✅ Backend is healthy and running!"
             break
         fi
@@ -51,7 +53,7 @@ pkill -9 -f "cloudflared tunnel" >/dev/null 2>&1 || true
 rm -f "$DIR/tunnel.log" "$DIR/tunnel_url.txt"
 sleep 1
 
-nohup "$DIR/bin/cloudflared" tunnel --url http://127.0.0.1:8000 --protocol http2 > "$DIR/tunnel.log" 2>&1 &
+nohup "$DIR/bin/cloudflared" tunnel --url "http://127.0.0.1:${BACKEND_PORT}" --protocol http2 > "$DIR/tunnel.log" 2>&1 &
 disown
 
 echo "⏳ Waiting for Cloudflare Tunnel URL..."
