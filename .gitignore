@@ -35,3 +35,4 @@ Thumbs.db
 .claude
 bin/
 tunnel_url.txt
+ngrok_domain.txt
