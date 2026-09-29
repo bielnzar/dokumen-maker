@@ -9,10 +9,18 @@ export interface HealthStatus {
   version?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://context-mile-hire-cigarettes.trycloudflare.com');
+const getDefaultBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('dokumen_maker_api_url');
+    if (saved && saved.trim()) return saved.trim().replace(/\/+$/, '');
+  }
+  return import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://character-decade-tagged-remark.trycloudflare.com');
+};
+
+let currentBaseUrl = getDefaultBaseUrl();
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: currentBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,7 +42,7 @@ export const apiService = {
   },
 
   subscribeToProgress(fileId: string, onProgress: (progress: UploadProgress) => void): () => void {
-    const eventSource = new EventSource(`${API_BASE_URL}/api/upload/progress/${fileId}`);
+    const eventSource = new EventSource(`${currentBaseUrl}/api/upload/progress/${fileId}`);
 
     eventSource.onmessage = (event) => {
       if (event.data === '[DONE]') {
@@ -80,8 +88,21 @@ export const apiService = {
     return response.data;
   },
 
+  getBaseURL(): string {
+    return currentBaseUrl;
+  },
+
+  setBaseURL(newUrl: string): void {
+    const cleaned = newUrl.trim().replace(/\/+$/, '');
+    currentBaseUrl = cleaned;
+    api.defaults.baseURL = cleaned;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dokumen_maker_api_url', cleaned);
+    }
+  },
+
   getDownloadURL(filename: string): string {
-    return `${API_BASE_URL}/api/download/${filename}`;
+    return `${currentBaseUrl}/api/download/${filename}`;
   },
 
   async getDocumentTypes(): Promise<{ document_types: string[]; default: string }> {

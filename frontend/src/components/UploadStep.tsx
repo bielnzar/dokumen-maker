@@ -21,7 +21,7 @@ interface UploadStepProps {
 }
 
 export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
-  const { isOnline, isChecking, checkConnection } = useConnection();
+  const { isOnline, isChecking, apiUrl, checkConnection } = useConnection();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,11 +138,12 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
               </Button>
             </div>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-              Sistem tidak dapat terhubung ke service backend pengolahan data lokal. Harap pastikan server telah diaktifkan:
+              Frontend saat ini mencoba menghubungi backend di: <code className="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/60 font-mono text-[11px] text-rose-950 dark:text-rose-200">{apiUrl}</code>.
+              Jika Anda me-restart Cloudflare Tunnel, klik status <strong>Server Terputus</strong> di kanan atas untuk memperbarui URL backend tanpa perlu build ulang.
             </p>
             <div className="p-2 rounded-lg bg-rose-100/70 dark:bg-rose-900/40 font-mono text-[11px] text-rose-950 dark:text-rose-200 flex items-center justify-between">
               <span>./start_public_server.sh</span>
-              <span className="text-[10px] text-rose-600 dark:text-rose-400 font-sans">Jalankan di Terminal</span>
+              <span className="text-[10px] text-rose-600 dark:text-rose-400 font-sans">Jalankan di Terminal jika server belum aktif</span>
             </div>
           </div>
         )}

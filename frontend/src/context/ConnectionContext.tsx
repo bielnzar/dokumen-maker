@@ -7,7 +7,9 @@ interface ConnectionContextType {
   healthData: HealthStatus | null;
   latencyMs: number | null;
   lastChecked: Date | null;
+  apiUrl: string;
   checkConnection: () => Promise<void>;
+  updateApiUrl: (newUrl: string) => Promise<void>;
 }
 
 const ConnectionContext = createContext<ConnectionContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const ConnectionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [healthData, setHealthData] = useState<HealthStatus | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [apiUrl, setApiUrl] = useState<string>(apiService.getBaseURL());
 
   const checkConnection = useCallback(async () => {
     setIsChecking(true);
@@ -42,6 +45,12 @@ export const ConnectionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, []);
 
+  const updateApiUrl = useCallback(async (newUrl: string) => {
+    apiService.setBaseURL(newUrl);
+    setApiUrl(apiService.getBaseURL());
+    await checkConnection();
+  }, [checkConnection]);
+
   useEffect(() => {
     checkConnection();
     // Poll every 25 seconds
@@ -57,7 +66,9 @@ export const ConnectionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         healthData,
         latencyMs,
         lastChecked,
+        apiUrl,
         checkConnection,
+        updateApiUrl,
       }}
     >
       {children}
