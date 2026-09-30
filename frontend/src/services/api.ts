@@ -104,7 +104,14 @@ export const apiService = {
   },
 
   getDownloadURL(filename: string): string {
-    return `${currentBaseUrl}/api/download/${filename}`;
+    return `${currentBaseUrl}/api/download/${filename}?ngrok-skip-browser-warning=true`;
+  },
+
+  async downloadFile(filename: string): Promise<Blob> {
+    const response = await api.get(`/api/download/${filename}`, {
+      responseType: 'blob',
+    });
+    return response.data;
   },
 
   async getDocumentTypes(): Promise<{ document_types: string[]; default: string }> {

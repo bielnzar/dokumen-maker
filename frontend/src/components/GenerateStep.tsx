@@ -112,14 +112,26 @@ export const GenerateStep: React.FC<GenerateStepProps> = ({ data }) => {
     }
   };
 
-  const handleDownload = (filename: string) => {
-    const url = apiService.getDownloadURL(filename);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
+
+  const handleDownload = async (filename: string) => {
+    try {
+      setDownloadingFile(filename);
+      const blob = await apiService.downloadFile(filename);
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+    } catch (err) {
+      console.error('Download via blob failed, fallback to direct url:', err);
+      window.open(apiService.getDownloadURL(filename), '_blank');
+    } finally {
+      setDownloadingFile(null);
+    }
   };
 
   return (
@@ -342,21 +354,31 @@ export const GenerateStep: React.FC<GenerateStepProps> = ({ data }) => {
                   {generatedFiles.rab_xlsx && (
                     <Button
                       onClick={() => handleDownload(generatedFiles.rab_xlsx!)}
+                      disabled={!!downloadingFile}
                       size="sm"
                       variant="outline"
                       className="text-xs h-8 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {downloadingFile === generatedFiles.rab_xlsx ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                      )}
                       XLSX
                     </Button>
                   )}
                   {generatedFiles.rab_pdf && (
                     <Button
                       onClick={() => handleDownload(generatedFiles.rab_pdf!)}
+                      disabled={!!downloadingFile}
                       size="sm"
                       className="text-xs h-8 bg-red-600 hover:bg-red-700 text-white shadow-2xs"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {downloadingFile === generatedFiles.rab_pdf ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                      )}
                       PDF
                     </Button>
                   )}
@@ -384,21 +406,31 @@ export const GenerateStep: React.FC<GenerateStepProps> = ({ data }) => {
                   {generatedFiles.rks && (
                     <Button
                       onClick={() => handleDownload(generatedFiles.rks!)}
+                      disabled={!!downloadingFile}
                       size="sm"
                       variant="outline"
                       className="text-xs h-8 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {downloadingFile === generatedFiles.rks ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                      )}
                       DOCX
                     </Button>
                   )}
                   {generatedFiles.rks_pdf && (
                     <Button
                       onClick={() => handleDownload(generatedFiles.rks_pdf!)}
+                      disabled={!!downloadingFile}
                       size="sm"
                       className="text-xs h-8 bg-red-600 hover:bg-red-700 text-white shadow-2xs"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {downloadingFile === generatedFiles.rks_pdf ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                      )}
                       PDF
                     </Button>
                   )}
@@ -426,21 +458,31 @@ export const GenerateStep: React.FC<GenerateStepProps> = ({ data }) => {
                   {generatedFiles.nodin && (
                     <Button
                       onClick={() => handleDownload(generatedFiles.nodin!)}
+                      disabled={!!downloadingFile}
                       size="sm"
                       variant="outline"
                       className="text-xs h-8 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {downloadingFile === generatedFiles.nodin ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                      )}
                       DOCX
                     </Button>
                   )}
                   {generatedFiles.nodin_pdf && (
                     <Button
                       onClick={() => handleDownload(generatedFiles.nodin_pdf!)}
+                      disabled={!!downloadingFile}
                       size="sm"
                       className="text-xs h-8 bg-red-600 hover:bg-red-700 text-white shadow-2xs"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {downloadingFile === generatedFiles.nodin_pdf ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                      )}
                       PDF
                     </Button>
                   )}
