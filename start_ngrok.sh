@@ -38,8 +38,7 @@ else
     fuser -k "${BACKEND_PORT}/tcp" >/dev/null 2>&1 || true
     sleep 1
     cd "$DIR/backend"
-    nohup "$DIR/backend/venv/bin/uvicorn" main:app --host 0.0.0.0 --port "${BACKEND_PORT}" > "$DIR/backend.log" 2>&1 &
-    disown
+    setsid "$DIR/backend/venv/bin/uvicorn" main:app --host 0.0.0.0 --port "${BACKEND_PORT}" </dev/null > "$DIR/backend.log" 2>&1 &
     cd "$DIR"
 
     echo "⏳ Menunggu backend aktif..."
@@ -70,9 +69,9 @@ sleep 1
 echo "🌐 Menjalankan Ngrok Tunnel..."
 if [ -n "$STATIC_DOMAIN" ]; then
     echo "📌 Menggunakan Static Domain: $STATIC_DOMAIN"
-    setsid "$NGROK_BIN" http --url="$STATIC_DOMAIN" "$BACKEND_PORT" --log=stdout </dev/null > "$DIR/ngrok.log" 2>&1 &
+    setsid "$NGROK_BIN" http "127.0.0.1:${BACKEND_PORT}" --url="$STATIC_DOMAIN" --log=stdout </dev/null > "$DIR/ngrok.log" 2>&1 &
 else
-    setsid "$NGROK_BIN" http "$BACKEND_PORT" --log=stdout </dev/null > "$DIR/ngrok.log" 2>&1 &
+    setsid "$NGROK_BIN" http "127.0.0.1:${BACKEND_PORT}" --log=stdout </dev/null > "$DIR/ngrok.log" 2>&1 &
 fi
 
 # 6. Dapatkan Public URL dari API lokal Ngrok

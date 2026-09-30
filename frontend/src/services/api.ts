@@ -43,34 +43,35 @@ export const apiService = {
   },
 
   subscribeToProgress(fileId: string, onProgress: (progress: UploadProgress) => void): () => void {
-    const eventSource = new EventSource(`${currentBaseUrl}/api/upload/progress/${fileId}`);
+    let isActive = true;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-    eventSource.onmessage = (event) => {
-      if (event.data === '[DONE]') {
-        eventSource.close();
-        return;
-      }
-
+    const checkProgress = async () => {
+      if (!isActive) return;
       try {
-        const progress: UploadProgress = JSON.parse(event.data);
-
-        onProgress(progress);
-
-        if (progress.status === 'completed' || progress.status === 'error') {
-          eventSource.close();
+        const response = await api.get<UploadProgress>(`/api/upload/status/${fileId}`);
+        if (!isActive) return;
+        const data = response.data;
+        if (data && data.status) {
+          onProgress(data);
+          if (data.status === 'completed' || data.status === 'error') {
+            isActive = false;
+            if (pollInterval) clearInterval(pollInterval);
+          }
         }
-      } catch (e) {
-        console.error('Failed to parse progress:', e);
+      } catch (err) {
+        console.warn('Gagal mengambil status proses:', err);
       }
     };
 
-    eventSource.onerror = () => {
-      eventSource.close();
-    };
+    // First check immediately
+    checkProgress();
+    // Poll every 800ms
+    pollInterval = setInterval(checkProgress, 800);
 
-    // Return cleanup function
     return () => {
-      eventSource.close();
+      isActive = false;
+      if (pollInterval) clearInterval(pollInterval);
     };
   },
 

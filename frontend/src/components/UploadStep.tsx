@@ -65,7 +65,13 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
 
     setLoading(true);
     setError(null);
-    setProgress(null);
+    setProgress({
+      current_page: 0,
+      total_pages: 1,
+      status: 'processing',
+      message: 'Mengunggah dan menyiapkan berkas...',
+      phase: 'ocr'
+    });
     resultFetchedRef.current = false;
 
     try {

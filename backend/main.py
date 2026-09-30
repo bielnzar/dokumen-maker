@@ -209,6 +209,12 @@ async def upload_progress(file_id: str):
     )
 
 
+@app.get("/api/upload/status/{file_id}")
+async def get_upload_status(file_id: str):
+    """Direct polling endpoint for upload and extraction progress (tunnel-safe)"""
+    return progress_manager.get_progress(file_id)
+
+
 @app.post("/api/upload/result/{file_id}")
 async def get_upload_result(file_id: str):
     """Get extraction result after processing completes"""
