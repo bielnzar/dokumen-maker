@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Input } from './ui/input';
@@ -18,19 +18,52 @@ export const TerminPreview: React.FC<TerminPreviewProps> = ({
   onChange,
   onValidationChange
 }) => {
+  const [userEdits, setUserEdits] = useState<Record<number, number | string>>({});
+
+  // Reset user manual edits when the termin count changes
+  useEffect(() => {
+    setUserEdits({});
+  }, [terminCount]);
+
   const basePercentages = useMemo(() => {
-    if (initialValues) {
-      const values = [];
-      for (let i = 1; i <= terminCount; i++) {
-        const key = `termin_${i}_percent`;
-        values.push(parseFloat(initialValues[key]) || (100 / terminCount));
+    const count = Math.max(1, terminCount);
+
+    // If initialValues provided has all keys for 1..count
+    let hasAllInitial = true;
+    if (initialValues && Object.keys(initialValues).length > 0) {
+      for (let i = 1; i <= count; i++) {
+        const val = parseFloat(initialValues[`termin_${i}_percent`]);
+        if (isNaN(val)) {
+          hasAllInitial = false;
+          break;
+        }
+      }
+    } else {
+      hasAllInitial = false;
+    }
+
+    if (hasAllInitial && initialValues) {
+      const values: number[] = [];
+      for (let i = 1; i <= count; i++) {
+        values.push(parseFloat(initialValues[`termin_${i}_percent`]) || 0);
       }
       return values;
     }
-    return Array(terminCount).fill(100 / terminCount);
-  }, [terminCount, initialValues]);
 
-  const [userEdits, setUserEdits] = useState<Record<number, number | string>>({});
+    // Default uniform division summing to exactly 100.00
+    const values: number[] = [];
+    const baseVal = Math.floor((100 / count) * 100) / 100;
+    let accumulated = 0;
+    for (let i = 0; i < count; i++) {
+      if (i === count - 1) {
+        values.push(Number((100 - accumulated).toFixed(2)));
+      } else {
+        values.push(baseVal);
+        accumulated += baseVal;
+      }
+    }
+    return values;
+  }, [terminCount, initialValues]);
 
   const percentages = useMemo(() => {
     return basePercentages.map((base, i) =>
@@ -38,42 +71,38 @@ export const TerminPreview: React.FC<TerminPreviewProps> = ({
     );
   }, [basePercentages, userEdits]);
 
-  const isInitialMount = React.useRef(true);
-  const prevTerminCountRef = React.useRef(terminCount);
+  const lastEmittedRef = useRef<string>('');
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      prevTerminCountRef.current = terminCount;
-      return;
-    }
-
-    if (prevTerminCountRef.current !== terminCount) {
-      prevTerminCountRef.current = terminCount;
-      return;
-    }
-
+    const count = Math.max(1, terminCount);
     const payment_terms: Record<string, string> = {};
-    for (let i = 0; i < terminCount; i++) {
+    for (let i = 0; i < count; i++) {
       const value = percentages[i];
-      const numValue = typeof value === 'number' ? value : parseFloat(value);
-      payment_terms[`termin_${i + 1}_percent`] = isNaN(numValue) ? '0' : numValue.toFixed(2);
+      const numValue = typeof value === 'number' ? value : parseFloat(String(value));
+      payment_terms[`termin_${i + 1}_percent`] = isNaN(numValue) ? '0' : String(numValue);
     }
-    onChange(payment_terms);
+
+    const serialized = JSON.stringify(payment_terms);
+    if (lastEmittedRef.current !== serialized) {
+      lastEmittedRef.current = serialized;
+      onChange(payment_terms);
+    }
   }, [percentages, terminCount, onChange]);
 
   const handleChange = (index: number, value: string) => {
     setUserEdits(prev => ({ ...prev, [index]: value }));
   };
 
-  const totalPercentage = percentages.reduce((sum: number, p) => {
-    const numValue = typeof p === 'number' ? p : parseFloat(p);
-    return sum + (isNaN(numValue) ? 0 : numValue);
-  }, 0);
+  const totalPercentage = useMemo(() => {
+    return percentages.reduce((sum: number, p) => {
+      const numValue = typeof p === 'number' ? p : parseFloat(String(p));
+      return sum + (isNaN(numValue) ? 0 : numValue);
+    }, 0);
+  }, [percentages]);
 
-  const isOverLimit = totalPercentage > 100.01;
-  const isUnderLimit = totalPercentage < 99.99;
-  const isValid = !isOverLimit && !isUnderLimit;
+  const isValid = Math.abs(totalPercentage - 100) <= 0.05;
+  const isOverLimit = totalPercentage > 100.05;
+  const isUnderLimit = totalPercentage < 99.95;
 
   useEffect(() => {
     onValidationChange?.(isValid);
@@ -92,7 +121,7 @@ export const TerminPreview: React.FC<TerminPreviewProps> = ({
           </CardDescription>
         </div>
 
-        {/* Clean status without bordered pill box */}
+        {/* Status indicator */}
         <div className="flex items-center gap-2 text-xs font-medium self-start sm:self-center">
           <span className={cn(
             "w-2 h-2 rounded-full",

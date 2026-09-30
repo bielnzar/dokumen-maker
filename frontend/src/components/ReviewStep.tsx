@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { ExtractedData, Item, SortableActivityProps, ReviewStepProps } from '../types';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -86,13 +86,48 @@ function SortableActivity({ activity, index, animationIndex, onUpdate, onDelete 
   );
 }
 
+const generateDefaultPaymentTerms = (count: number, existing?: Record<string, string>): Record<string, string> => {
+  const numCount = Math.max(1, count);
+  if (existing && Object.keys(existing).length > 0) {
+    let hasAll = true;
+    for (let i = 1; i <= numCount; i++) {
+      if (!existing[`termin_${i}_percent`]) {
+        hasAll = false;
+        break;
+      }
+    }
+    if (hasAll) {
+      return existing;
+    }
+  }
+
+  const terms: Record<string, string> = {};
+  const base = Math.floor((100 / numCount) * 100) / 100;
+  let acc = 0;
+  for (let i = 1; i <= numCount; i++) {
+    if (i === numCount) {
+      terms[`termin_${i}_percent`] = (100 - acc).toFixed(2);
+    } else {
+      terms[`termin_${i}_percent`] = base.toFixed(2);
+      acc += base;
+    }
+  }
+  return terms;
+};
+
 export const ReviewStep: React.FC<ReviewStepProps> = ({ data, fileId, lhpText, onUpdate }) => {
+  const initialTerminCount = Number(data.termin_count) || 1;
+  const initialPaymentTerms = useMemo(() => {
+    return generateDefaultPaymentTerms(initialTerminCount, data.payment_terms);
+  }, [initialTerminCount, data.payment_terms]);
+
   const [editedData, setEditedData] = useState<ExtractedData>({
     ...data,
-    termin_count: data.termin_count || 1
+    termin_count: initialTerminCount,
+    payment_terms: initialPaymentTerms
   });
-  const [paymentTerms, setPaymentTerms] = useState<Record<string, string>>(data.payment_terms || {});
-  const [tempTerminCount, setTempTerminCount] = useState<string>(String(data.termin_count || 1));
+  const [paymentTerms, setPaymentTerms] = useState<Record<string, string>>(initialPaymentTerms);
+  const [tempTerminCount, setTempTerminCount] = useState<string>(String(initialTerminCount));
   const [isTerminValid, setIsTerminValid] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [customPasal2Prompt, setCustomPasal2Prompt] = useState('');
@@ -120,7 +155,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ data, fileId, lhpText, o
   useEffect(() => {
     const validationErrors: string[] = [];
     if (editedData.document_type !== 'PADI_UMKM' && !isTerminValid) {
-      validationErrors.push('Total persentase termin melebihi 100%');
+      validationErrors.push('Total persentase termin harus tepat 100%');
     }
     const dataToSync = { ...editedData, payment_terms: paymentTerms, validation_errors: validationErrors };
     onUpdate(dataToSync);
@@ -346,6 +381,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ data, fileId, lhpText, o
                         const num = parseInt(tempTerminCount);
                         if (!isNaN(num) && num >= 1 && num <= 16) {
                           handleInputChange('termin_count', num);
+                          const newTerms = generateDefaultPaymentTerms(num);
+                          setPaymentTerms(newTerms);
                         }
                       }}
                       className="text-xs h-9 px-3"
@@ -366,7 +403,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ data, fileId, lhpText, o
         {editedData.document_type !== 'PADI_UMKM' && (
           <TerminPreview
             terminCount={Number(editedData.termin_count) || 1}
-            initialValues={editedData.payment_terms}
+            initialValues={paymentTerms}
             onChange={setPaymentTerms}
             onValidationChange={(isValid) => {
               setIsTerminValid(isValid);

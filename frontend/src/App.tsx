@@ -181,16 +181,36 @@ function App() {
                       }
 
                       // Validate termin percentage totals to 100%
-                      if (extractedData.document_type !== 'PADI_UMKM' && extractedData.payment_terms) {
-                        const totalPercent = Object.entries(extractedData.payment_terms).reduce((sum, [key, value]) => {
-                          if (key.startsWith('termin_') && key.endsWith('_percent')) {
+                      if (extractedData.document_type !== 'PADI_UMKM') {
+                        const count = Number(extractedData.termin_count) || 1;
+                        const terms = extractedData.payment_terms;
+                        const terminEntries = Object.entries(terms || {}).filter(
+                          ([key]) => key.startsWith('termin_') && key.endsWith('_percent')
+                        );
+
+                        if (terminEntries.length > 0) {
+                          const totalPercent = terminEntries.reduce((sum, [, value]) => {
                             return sum + (parseFloat(value) || 0);
+                          }, 0);
+
+                          if (Math.abs(totalPercent - 100) > 0.05) {
+                            setAlertMessage(`Total persentase termin harus tepat 100%. Saat ini: ${totalPercent.toFixed(2)}%`);
+                            return;
                           }
-                          return sum;
-                        }, 0);
-                        if (totalPercent !== 100) {
-                          setAlertMessage(`Total persentase termin harus tepat 100%. Saat ini: ${totalPercent.toFixed(2)}%`);
-                          return;
+                        } else {
+                          // Auto-generate fallback terms if missing so user is never blocked by empty terms
+                          const fallbackTerms: Record<string, string> = {};
+                          const base = Math.floor((100 / count) * 100) / 100;
+                          let acc = 0;
+                          for (let i = 1; i <= count; i++) {
+                            if (i === count) {
+                              fallbackTerms[`termin_${i}_percent`] = (100 - acc).toFixed(2);
+                            } else {
+                              fallbackTerms[`termin_${i}_percent`] = base.toFixed(2);
+                              acc += base;
+                            }
+                          }
+                          extractedData.payment_terms = fallbackTerms;
                         }
                       }
 
