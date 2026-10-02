@@ -1,0 +1,31 @@
+[Unit]
+Description=DokumenMaker FastAPI Backend Service (Internal Only)
+After=network.target
+
+[Service]
+Type=simple
+# Ganti 'user' sesuai nama user linux yang menjalankan aplikasi di VPS
+User=www-data
+Group=www-data
+
+# Ganti WorkingDirectory sesuai lokasi clone repo di VPS
+WorkingDirectory=/var/www/dokumenmaker/backend
+
+# Jalankan uvicorn melalui Python virtualenv yang terisolasi
+# Perhatikan --host 127.0.0.1: Hanya mengikat ke localhost agar terlindungi dari akses publik
+ExecStart=/var/www/dokumenmaker/backend/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8090 --workers 2
+
+Restart=always
+RestartSec=5s
+
+# Limit dan Environment
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/var/www/dokumenmaker/backend/.env
+
+# Proteksi keamanan dasar systemd
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

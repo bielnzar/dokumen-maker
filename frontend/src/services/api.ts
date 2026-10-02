@@ -14,16 +14,17 @@ const getDefaultBaseUrl = (): string => {
     const saved = localStorage.getItem('dokumen_maker_api_url');
     if (saved && saved.trim()) return saved.trim().replace(/\/+$/, '');
   }
-  return import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8090' : 'https://nonpossessive-pinkly-mattie.ngrok-free.dev');
+  // Empty string defaults to same-origin relative URLs (/api/..., /health)
+  // Perfectly handled by Vite proxy in development or Nginx reverse proxy in production VPS!
+  return import.meta.env.VITE_API_BASE_URL || '';
 };
 
 let currentBaseUrl = getDefaultBaseUrl();
 
 const api = axios.create({
-  baseURL: currentBaseUrl,
+  baseURL: currentBaseUrl || undefined,
   headers: {
     'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
   },
 });
 
@@ -97,14 +98,19 @@ export const apiService = {
   setBaseURL(newUrl: string): void {
     const cleaned = newUrl.trim().replace(/\/+$/, '');
     currentBaseUrl = cleaned;
-    api.defaults.baseURL = cleaned;
+    api.defaults.baseURL = cleaned || undefined;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('dokumen_maker_api_url', cleaned);
+      if (cleaned) {
+        localStorage.setItem('dokumen_maker_api_url', cleaned);
+      } else {
+        localStorage.removeItem('dokumen_maker_api_url');
+      }
     }
   },
 
   getDownloadURL(filename: string): string {
-    return `${currentBaseUrl}/api/download/${filename}?ngrok-skip-browser-warning=true`;
+    const base = currentBaseUrl ? `${currentBaseUrl}` : '';
+    return `${base}/api/download/${filename}`;
   },
 
   async downloadFile(filename: string): Promise<Blob> {

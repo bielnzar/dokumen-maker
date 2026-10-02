@@ -109,6 +109,34 @@ class OCRService:
         logger.info(f"EasyOCR extracted {len(full_text)} characters")
         return full_text
 
+    @staticmethod
+    def slice_core_lhp_content(raw_text: str) -> str:
+        """Strip non-procurement attachment pages (such as ITSM incident report forms,
+        server logs, confidential disclaimers) that bloat LLM token counts.
+        Keeps the core LHP/Berita Acara findings, recommendations, and specifications.
+        """
+        if not raw_text:
+            return ""
+
+        # Known attachment / incident form markers that appear after the official Berita Acara
+        attachment_markers = [
+            "IT INCIDENT REPORT FORM",
+            "INCIDENT REPORT FORM",
+            "LAMPIRAN TIKET",
+            "SUMMARY OF THE PROBLEM",
+            "DISTRIBUTION OF THIS DOCUMENT IS LIMITED",
+        ]
+
+        cleaned = raw_text
+        for marker in attachment_markers:
+            idx = cleaned.upper().find(marker)
+            if idx != -1:
+                logger.info(f"[OCR] Truncating attachment logs at marker '{marker}' (reduced from {len(cleaned)} to {idx} chars)")
+                cleaned = cleaned[:idx].strip()
+                break
+
+        return cleaned
+
     def cleanup_text(self, raw_text: str) -> str:
         """Basic text cleanup"""
         # Remove excessive whitespace

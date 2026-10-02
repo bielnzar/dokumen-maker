@@ -27,11 +27,11 @@ if ss -tuln | grep -q ":5173 "; then
     FRONTEND_PORT=5174
 fi
 
-# Start backend
-echo "Starting backend on http://localhost:$BACKEND_PORT..."
+# Start backend (bound to 127.0.0.1 loopback for security - no direct public access)
+echo "Starting backend on http://127.0.0.1:$BACKEND_PORT (internal only)..."
 cd "$SCRIPT_DIR/backend"
 source venv/bin/activate
-"$SCRIPT_DIR/backend/venv/bin/python" -m uvicorn main:app --host 0.0.0.0 --port "$BACKEND_PORT" --reload &
+"$SCRIPT_DIR/backend/venv/bin/python" -m uvicorn main:app --host 127.0.0.1 --port "$BACKEND_PORT" --reload &
 BACKEND_PID=$!
 
 sleep 1
@@ -43,13 +43,13 @@ fi
 # Start frontend
 echo "Starting frontend on http://localhost:$FRONTEND_PORT..."
 cd "$SCRIPT_DIR/frontend"
-VITE_API_BASE_URL="http://localhost:$BACKEND_PORT" npm run dev -- --host 0.0.0.0 --port $FRONTEND_PORT &
+VITE_BACKEND_TARGET="http://127.0.0.1:$BACKEND_PORT" npm run dev -- --host 0.0.0.0 --port $FRONTEND_PORT &
 FRONTEND_PID=$!
 
 echo ""
 echo "=== Running ==="
-echo "Backend:  http://localhost:$BACKEND_PORT"
-echo "Frontend: http://localhost:$FRONTEND_PORT"
+echo "Backend:  http://127.0.0.1:$BACKEND_PORT (Aman / internal loopback)"
+echo "Frontend: http://localhost:$FRONTEND_PORT (Reverse proxy aktif ke backend)"
 echo ""
 echo "Press Ctrl+C to stop"
 
