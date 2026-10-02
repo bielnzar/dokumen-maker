@@ -21,7 +21,7 @@ interface UploadStepProps {
 }
 
 export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
-  const { isOnline, isChecking, apiUrl, checkConnection, updateApiUrl } = useConnection();
+  const { isOnline, isChecking, checkConnection } = useConnection();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +129,7 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2 font-semibold text-rose-900 dark:text-rose-200">
                 <WifiOff className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>Layanan Pengolahan Dokumen Terputus</span>
+                <span>Pengolahan Dokumen Terputus</span>
               </div>
               <Button
                 type="button"
@@ -144,22 +144,8 @@ export const UploadStep: React.FC<UploadStepProps> = ({ onNext }) => {
               </Button>
             </div>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-              Frontend saat ini mencoba menghubungi backend di: <code className="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/60 font-mono text-[11px] text-rose-950 dark:text-rose-200">{apiUrl}</code>.
+              Layanan backend belum dapat dihubungi. Pastikan service backend aktif pada port 8090 (localhost) atau jalankan script server.
             </p>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Button
-                type="button"
-                size="sm"
-                variant="default"
-                onClick={() => updateApiUrl('https://nonpossessive-pinkly-mattie.ngrok-free.dev')}
-                className="h-7 px-3 text-[11px] font-semibold bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer"
-              >
-                Sambungkan ke Ngrok Aktif
-              </Button>
-              <span className="text-[11px] text-slate-500">
-                atau klik badge <strong>Server Terputus</strong> di kanan atas.
-              </span>
-            </div>
           </div>
         )}
 

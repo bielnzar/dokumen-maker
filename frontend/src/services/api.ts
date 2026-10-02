@@ -12,10 +12,15 @@ export interface HealthStatus {
 const getDefaultBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('dokumen_maker_api_url');
-    if (saved && saved.trim()) return saved.trim().replace(/\/+$/, '');
+    // Otomatis bersihkan cache ngrok / cloudflare lama dari localStorage browser
+    if (saved && (saved.includes('ngrok') || saved.includes('trycloudflare') || saved.includes('http://') || saved.includes('https://'))) {
+      localStorage.removeItem('dokumen_maker_api_url');
+    } else if (saved && saved.trim()) {
+      return saved.trim().replace(/\/+$/, '');
+    }
   }
-  // Empty string defaults to same-origin relative URLs (/api/..., /health)
-  // Perfectly handled by Vite proxy in development or Nginx reverse proxy in production VPS!
+  // Default string kosong: request selalu relatif same-origin (/api/..., /health)
+  // Ditangani secara aman oleh Vite proxy di dev atau Nginx di production VPS
   return import.meta.env.VITE_API_BASE_URL || '';
 };
 
