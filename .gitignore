@@ -3,6 +3,8 @@ output
 output_test
 extracted
 venv
+env
+backend/env
 .env
 .py*
 CLAUDE.md

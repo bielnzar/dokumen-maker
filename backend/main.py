@@ -13,6 +13,7 @@ import asyncio
 from services.ocr_service import OCRService
 from services.extraction_service import ExtractionService
 from services.docx_service import DOCXService
+from services.table_extractor import TableExtractor
 from utils.config import Config
 from utils.logger import setup_logger
 from utils.progress import progress_manager
@@ -58,16 +59,27 @@ _regenerating_files: set = set()  # Track files currently being regenerated
 
 
 def process_pdf_background(file_id: str, file_path: Path):
-    """Background task to process PDF with progress updates"""
+    """Background task to process PDF with progress updates using Hybrid Pipeline"""
     try:
         logger.info(f"[Background] Task started for {file_id}")
+
+        # 1. Deterministic Table Extraction (0 Tokens)
+        deterministic_items = []
+        try:
+            deterministic_items = TableExtractor.extract_boq_items(str(file_path))
+            logger.info(f"[Background] Deterministic table extraction: found {len(deterministic_items)} items")
+        except Exception as e:
+            logger.warning(f"[Background] Deterministic table extraction skipped: {e}")
+
+        # 2. Text Extraction & Attachment Slicing
         ocr_service = OCRService()
         def progress_callback(current_page: int, total_pages: int, message: str):
             progress_manager.update_progress(file_id, current_page, total_pages, message)
-        # OCR extraction with progress
+
         logger.info(f"[Background] Starting OCR for {file_id}")
-        lhp_text = ocr_service.extract_text(str(file_path), progress_callback=progress_callback)
-        logger.info(f"[Background] OCR completed, {len(lhp_text)} chars")
+        raw_lhp_text = ocr_service.extract_text(str(file_path), progress_callback=progress_callback)
+        clean_lhp_text = ocr_service.slice_core_lhp_content(raw_lhp_text)
+        logger.info(f"[Background] Text extraction: raw {len(raw_lhp_text)} chars -> clean {len(clean_lhp_text)} chars (saved {len(raw_lhp_text) - len(clean_lhp_text)} chars)")
 
         # Start AI extraction
         progress_manager.start_ai_phase(file_id)
@@ -76,10 +88,10 @@ def process_pdf_background(file_id: str, file_path: Path):
         # Detect document type and extract
         extraction_service = ExtractionService()
         logger.info(f"[Background] Detecting document type...")
-        doc_type = extraction_service.detect_document_type(lhp_text)
+        doc_type = extraction_service.detect_document_type(clean_lhp_text)
         logger.info(f"[Background] Document type detected: {doc_type}")
 
-        logger.info(f"[Background] Calling Gemini API for structured extraction...")
+        logger.info(f"[Background] Calling Gemini API for single-pass structured extraction...")
 
         # Create progress callback for AI streaming and progress
         def ai_progress_callback(chunk: str):
@@ -88,12 +100,12 @@ def process_pdf_background(file_id: str, file_path: Path):
         # Update AI progress milestones
         progress_manager.update_ai_progress(file_id, 10)  # Starting extraction
 
-        # Create AI progress callback for milestones
         def ai_milestone_callback(progress_percent: int):
             progress_manager.update_ai_progress(file_id, progress_percent)
 
         extracted_data = extraction_service.extract_structured_data(
-            lhp_text, doc_type,
+            clean_lhp_text, doc_type,
+            deterministic_items=deterministic_items,
             progress_callback=ai_progress_callback,
             ai_progress_callback=ai_milestone_callback
         )
@@ -102,7 +114,7 @@ def process_pdf_background(file_id: str, file_path: Path):
 
         # Store result
         _extraction_results[file_id] = {
-            "lhp_text": lhp_text,
+            "lhp_text": clean_lhp_text,
             "extracted_data": extracted_data,
             "document_type": doc_type
         }
@@ -111,12 +123,14 @@ def process_pdf_background(file_id: str, file_path: Path):
         progress_manager.complete_upload(file_id, success=True)
 
         # Clean up uploaded file
-        file_path.unlink()
+        if file_path.exists():
+            file_path.unlink()
 
     except Exception as e:
         logger.error(f"[Background] Processing error: {e}")
         progress_manager.complete_upload(file_id, success=False, error=str(e))
-        file_path.unlink()
+        if file_path.exists():
+            file_path.unlink()
 
     
 

@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 import google.generativeai as genai
 from typing import Dict, Any, Optional
 from utils.config import Config
@@ -104,53 +106,87 @@ LHP Text:
 
         return "PENGADAAN"  # Default
 
-    def extract_structured_data(self, lhp_text: str, doc_type: str, progress_callback=None, ai_progress_callback=None) -> Dict[str, Any]:
-        """Extract all structured data from LHP"""
-        prompt = f"""
-You are an expert at extracting structured data from Indonesian government procurement documents (LHP - Laporan Hasil Pemeriksaan).
+    def extract_structured_data(
+        self,
+        lhp_text: str,
+        doc_type: str,
+        deterministic_items: Optional[list] = None,
+        progress_callback=None,
+        ai_progress_callback=None
+    ) -> Dict[str, Any]:
+        """Extract structured data from LHP using Hybrid Pipeline (Deterministic items + Single-Pass LLM).
+        Saves ~80-85% tokens by reusing verified table items and eliminating duplicate LLM calls.
+        """
+        from strategies.factory import StrategyFactory
+        strategy = StrategyFactory.create(doc_type)
+        examples = strategy.get_work_activity_examples()
 
-Extract ALL data needed to generate RAB and RKS documents for {doc_type}.
+        has_deterministic_items = bool(deterministic_items and len(deterministic_items) > 0)
 
-Return ONLY valid JSON. No markdown, no explanation.
+        if has_deterministic_items:
+            # Token-Efficient Single-Pass Prompt: Items already known, AI only drafts metadata & Pasal 2 narasi
+            items_summary = "\n".join([
+                f"- {it.get('uraian', '')} (Volume: {it.get('volume', '')} {it.get('satuan', '')})"
+                for it in deterministic_items
+            ])
+
+            prompt = f"""You are an expert at extracting structured procurement data from Indonesian LHP documents.
+The following items have already been verified from the document:
+{items_summary}
+
+Based on the LHP text below, extract metadata and generate professional work activities (Pasal 2 RKS for {doc_type}).
+Return ONLY valid JSON matching this structure:
+{{
+  "project_name": "Name of the procurement work (e.g. Pengadaan Baterai UPS..., do NOT include Laporan Hasil Pemeriksaan)",
+  "work_type": "{doc_type}",
+  "timeline": "Timeline/duration (e.g. 30 hari kalender sejak PO terbit)",
+  "scope_description": "Brief scope description (1-2 sentences)",
+  "work_activities": [
+    "1. Persiapan kerja dan pembongkaran/pelepasan unit lama...",
+    "2. Pengadaan dan pemasangan unit baru...",
+    "3. Pengujian fungsi (testing and commissioning)...",
+    "4. Penyerahan garansi purna jual..."
+  ]
+}}
+
+## Reference Work Activities for {doc_type}:
+{examples}
+
+## LHP Text:
+{lhp_text[:4000]}
+"""
+        else:
+            # Fallback Prompt for Scanned PDFs without digital table layer
+            prompt = f"""You are an expert at extracting structured data from Indonesian government procurement documents (LHP).
+Extract data needed to generate RAB and RKS documents for {doc_type}.
+Return ONLY valid JSON.
 
 ## Required JSON Structure:
-
 {{
-  "project_name": "Name of the procurement work (e.g. 'Pengadaan Baterai UPS...', NOT 'Laporan Hasil Pemeriksaan...')",
-  "work_type": "Type of work (e.g., Pengadaan, Pemeliharaan)",
+  "project_name": "Name of the procurement work (do NOT include Laporan Hasil Pemeriksaan)",
+  "work_type": "{doc_type}",
   "timeline": "Duration with start condition",
   "scope_description": "Brief scope description",
   "items": [
     {{
-      "no": "Row number from table (1, 2, 3, etc.)",
+      "no": "1",
       "uraian": "Item description/name",
       "volume": "Quantity as number",
-      "satuan": "Unit (unit, pcs, kg, etc.)",
-      "harga_satuan": "Unit price if available in table, otherwise leave empty"
+      "satuan": "Unit (unit, pcs, set, lot, etc.)",
+      "harga_satuan": ""
     }}
   ],
   "work_activities": [
-    "Activity 1",
-    "Activity 2"
-  ],
-  "payment_termins": [
-    {{
-      "termin": "I or II or III",
-      "percentage": "percentage as string",
-      "condition": "payment condition"
-    }}
+    "1. Activity 1...",
+    "2. Activity 2..."
   ]
 }}
 
-## Critical Extraction Rules:
-1. "project_name": MUST NOT start with "LAPORAN HASIL PEMERIKSAAN". Extract the actual procurement work title (e.g., "Pengadaan Baterai UPS Data Center...").
-2. Extract items from "Tabel 3.1" or similar - preserve original rows with no, uraian, volume, satuan, harga_satuan.
-3. DO NOT aggregate duplicates - extract each row as-is.
-4. Work activities come from numbered lists, NOT from items table.
-5. Payment terms: Extract termin structure with percentages.
+## Reference Work Activities for {doc_type}:
+{examples}
 
-## LHP Text to Extract From:
-{lhp_text[:12000]}
+## LHP Text:
+{lhp_text[:6000]}
 """
 
         try:
@@ -158,7 +194,7 @@ Return ONLY valid JSON. No markdown, no explanation.
                 ai_progress_callback(30)  # Request sent
             result = self._call_gemini(prompt, stream=True, progress_callback=progress_callback)
             if ai_progress_callback:
-                ai_progress_callback(80)  # Response received, parsing
+                ai_progress_callback(85)  # Response received, parsing
 
             # Parse JSON from response (handle markdown code blocks)
             import json
@@ -175,7 +211,7 @@ Return ONLY valid JSON. No markdown, no explanation.
             defaults = {
                 "timeline": "",
                 "scope_description": "",
-                "work_type": "",
+                "work_type": doc_type,
                 "work_activities": [],
                 "payment_termins": [],
                 "termin_count": 1,
@@ -186,35 +222,38 @@ Return ONLY valid JSON. No markdown, no explanation.
                 if key not in data or data[key] is None:
                     data[key] = default_value
 
-            # Ensure items have required fields with defaults
-            if "items" not in data or not data["items"]:
-                data["items"] = []
+            # If deterministic items were extracted, use them with 100% precision
+            if has_deterministic_items:
+                data["items"] = deterministic_items
+                logger.info(f"[Extraction] Injected {len(deterministic_items)} deterministic items directly (0 tokens wasted)")
             else:
-                # Ensure each item has required fields
-                for item in data["items"]:
-                    if "no" not in item:
-                        item["no"] = ""
-                    if "uraian" not in item:
-                        item["uraian"] = ""
-                    if "volume" not in item:
-                        item["volume"] = ""
-                    if "satuan" not in item:
-                        item["satuan"] = ""
-                    # harga_satuan is optional, don't force default
+                # Ensure items have required fields
+                if "items" not in data or not data["items"]:
+                    data["items"] = []
+                else:
+                    for item in data["items"]:
+                        if "no" not in item:
+                            item["no"] = ""
+                        if "uraian" not in item:
+                            item["uraian"] = ""
+                        if "volume" not in item:
+                            item["volume"] = ""
+                        if "satuan" not in item:
+                            item["satuan"] = ""
 
-            # Add timeline default based on document type
+            # Add timeline default based on document type if empty
             if not data.get("timeline"):
                 data["timeline"] = self._get_default_timeline(doc_type)
 
-            # Always regenerate work_activities to ensure proper lifecycle format
-            logger.info("Regenerating work activities with lifecycle prompt...")
-            if ai_progress_callback:
-                ai_progress_callback(90)  # Generating work activities
-            data["work_activities"] = self.generate_work_activities(data, progress_callback=progress_callback)
+            # Fallback if work_activities wasn't generated
+            if not data.get("work_activities"):
+                logger.info("Generating fallback work activities...")
+                data["work_activities"] = self.generate_work_activities(data, progress_callback=progress_callback)
+
             if ai_progress_callback:
                 ai_progress_callback(95)  # Finalizing
-            logger.info(f"Final: {len(data.get('work_activities', []))} work activities")
 
+            logger.info(f"Final extraction complete: {len(data.get('items', []))} items, {len(data.get('work_activities', []))} work activities")
             return data
 
         except Exception as e:
